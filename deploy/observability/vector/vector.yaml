@@ -68,9 +68,18 @@ transforms:
       if exists(.message) {
         parsed_json, err = parse_json(.message)
         if err == null && is_object(parsed_json) {
-          if exists(parsed_json.run_id) { .run_id = to_string(parsed_json.run_id) }
-          if exists(parsed_json.job_id) { .job_id = to_string(parsed_json.job_id) }
-          if exists(parsed_json.level) { .level = to_string(parsed_json.level) }
+          if exists(parsed_json.run_id) {
+            parsed_run_id, run_id_err = to_string(parsed_json.run_id)
+            if run_id_err == null { .run_id = parsed_run_id }
+          }
+          if exists(parsed_json.job_id) {
+            parsed_job_id, job_id_err = to_string(parsed_json.job_id)
+            if job_id_err == null { .job_id = parsed_job_id }
+          }
+          if exists(parsed_json.level) {
+            parsed_level, level_err = to_string(parsed_json.level)
+            if level_err == null { .level = parsed_level }
+          }
         }
       }
 
