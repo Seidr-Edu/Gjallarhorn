@@ -1,0 +1,73 @@
+# Gjallarhorn Observability Stack
+
+This bundle deploys the first-phase observability stack for the pipeline:
+
+- `Postgres` for structured pipeline data indexed from the filesystem
+- `Loki` for raw logs
+- `Vector` for journald/file collection and label enrichment
+- `Grafana` for dashboards and log drill-down
+- `run-indexer` as a standalone Gjallarhorn service
+
+The stack assumes the pipeline worker already owns:
+
+- `/srv/pipeline/queue`
+- `/srv/pipeline/runs`
+
+The observability services mount those paths read-only and do not mutate the
+pipeline itself.
+
+## Files
+
+- `docker-compose.yml`
+- `.env.example`
+- `run-indexer.Dockerfile`
+- `loki/config.yml`
+- `vector/vector.yaml`
+- `grafana/provisioning/...`
+- `grafana/dashboards/...`
+
+## Setup
+
+1. Copy `.env.example` to `.env` and set the Grafana and Postgres passwords.
+2. Ensure the host exposes:
+   - `/srv/pipeline/queue`
+   - `/srv/pipeline/runs`
+   - `/var/log/journal`
+   - `/run/log/journal`
+   - `/etc/machine-id`
+3. Start the stack:
+
+```bash
+docker compose up -d --build
+```
+
+Grafana will be available on `http://<host>:3000`.
+
+## Indexer
+
+The `run-indexer` container runs:
+
+```bash
+python -m gjallarhorn.cli indexer \
+  --queue-root /srv/pipeline/queue \
+  --runs-root /srv/pipeline/runs \
+  --poll-interval-sec 15 \
+  --retention-days 30
+```
+
+The Postgres schema defaults to `pipeline_obs`.
+
+## Dashboards
+
+Provisioned dashboards:
+
+- `Pipeline Overview`
+- `Run Detail`
+- `Kvasir Analysis`
+- `Lidskjalv / Sonar`
+- `Logs Drill-down`
+
+The dashboards assume the provisioned datasource UIDs:
+
+- `postgres-observability`
+- `loki-observability`

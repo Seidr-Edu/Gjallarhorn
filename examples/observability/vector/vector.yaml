@@ -1,0 +1,93 @@
+data_dir: /var/lib/vector
+
+sources:
+  journald_heimdall:
+    type: journald
+    current_boot_only: false
+    include_units:
+      - heimdall-worker.service
+
+  pipeline_logs:
+    type: file
+    include:
+      - /srv/pipeline/runs/*/pipeline/logs/*.log
+      - /srv/pipeline/runs/*/services/*/run/**/*.log
+      - /srv/pipeline/runs/*/services/*/run/**/*.jsonl
+    read_from: beginning
+
+transforms:
+  normalize_journald:
+    type: remap
+    inputs:
+      - journald_heimdall
+    source: |
+      .host = get_hostname!()
+      .source = "journald"
+      .service = if exists(._SYSTEMD_UNIT) { replace(string!(._SYSTEMD_UNIT), ".service", "") } else { "unknown" }
+      .step = ""
+      .run_id = ""
+      if exists(.message) {
+        parsed, err = parse_json(.message)
+        if err == null && is_object(parsed) {
+          if exists(parsed.run_id) { .run_id = to_string(parsed.run_id) ?? "" }
+          if exists(parsed.job_id) { .job_id = to_string(parsed.job_id) ?? null }
+          if exists(parsed.level) { .level = to_string(parsed.level) ?? null }
+        }
+      }
+
+  normalize_pipeline_logs:
+    type: remap
+    inputs:
+      - pipeline_logs
+    source: |
+      .host = get_hostname!()
+      .job_id = null
+      .level = null
+      .run_id = ""
+      .service = "unknown"
+      .step = ""
+      .source = "service"
+      path = to_string!(.file)
+
+      parsed_pipeline = parse_regex(path, r'^/srv/pipeline/runs/(?P<run_id>[^/]+)/pipeline/logs/(?P<step>[^/]+)\.log$')
+      if parsed_pipeline != null {
+        .run_id = parsed_pipeline.run_id
+        .step = parsed_pipeline.step
+        .service = parsed_pipeline.step
+        .source = "pipeline"
+      } else {
+        parsed_service = parse_regex(path, r'^/srv/pipeline/runs/(?P<run_id>[^/]+)/services/(?P<service>[^/]+)/run/.+$')
+        if parsed_service != null {
+          .run_id = parsed_service.run_id
+          .step = parsed_service.service
+          .service = parsed_service.service
+          .source = "service"
+        }
+      }
+
+      if exists(.message) {
+        parsed_json, err = parse_json(.message)
+        if err == null && is_object(parsed_json) {
+          if exists(parsed_json.run_id) { .run_id = to_string(parsed_json.run_id) ?? .run_id }
+          if exists(parsed_json.job_id) { .job_id = to_string(parsed_json.job_id) ?? null }
+          if exists(parsed_json.level) { .level = to_string(parsed_json.level) ?? null }
+        }
+      }
+
+sinks:
+  loki:
+    type: loki
+    inputs:
+      - normalize_journald
+      - normalize_pipeline_logs
+    endpoint: http://loki:3100
+    encoding:
+      codec: text
+    labels:
+      host: "{{ host }}"
+      source: "{{ source }}"
+      service: "{{ service }}"
+      step: "{{ step }}"
+      run_id: "{{ run_id }}"
+      job_id: "{{ job_id }}"
+      level: "{{ level }}"

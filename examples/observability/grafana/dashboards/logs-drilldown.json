@@ -1,0 +1,171 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana",
+        "uid": "-- Grafana --"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "Use the variables to filter Loki log streams. For a wider query, leave `service` and `step` on `All`.\n\nExplore links:\n\n- [Open current filter in Explore](/explore?left=%5B%22now-30d%22,%22now%22,%22loki-observability%22,%7B%22expr%22:%22%7Brun_id%3D~%5C%22${run_id:regex}%5C%22,service%3D~%5C%22${service:regex}%5C%22,step%3D~%5C%22${step:regex}%5C%22%7D%22%7D%5D)",
+        "mode": "markdown"
+      },
+      "title": "Instructions",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-observability"
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki-observability"
+          },
+          "expr": "{run_id=~\"${run_id:regex}\",service=~\"${service:regex}\",step=~\"${step:regex}\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Logs",
+      "type": "logs"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "heimdall",
+    "logs"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": ".*",
+          "value": ".*"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "postgres-observability"
+        },
+        "definition": "SELECT '.*' AS __text, '.*' AS __value UNION ALL SELECT run_id AS __text, run_id AS __value FROM pipeline_obs.runs ORDER BY 1;",
+        "includeAll": false,
+        "label": "Run ID",
+        "multi": false,
+        "name": "run_id",
+        "options": [],
+        "query": "SELECT '.*' AS __text, '.*' AS __value UNION ALL SELECT run_id AS __text, run_id AS __value FROM pipeline_obs.runs ORDER BY 1;",
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": ".*",
+          "value": ".*"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "loki-observability"
+        },
+        "definition": "label_values(service)",
+        "includeAll": true,
+        "label": "Service",
+        "multi": false,
+        "name": "service",
+        "options": [],
+        "query": {
+          "label": "service",
+          "refId": "LokiVariableQueryEditor-1",
+          "stream": "{run_id=~\"${run_id:regex}\"}",
+          "type": 1
+        },
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": ".*",
+          "value": ".*"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "loki-observability"
+        },
+        "definition": "label_values(step)",
+        "includeAll": true,
+        "label": "Step",
+        "multi": false,
+        "name": "step",
+        "options": [],
+        "query": {
+          "label": "step",
+          "refId": "LokiVariableQueryEditor-2",
+          "stream": "{run_id=~\"${run_id:regex}\",service=~\"${service:regex}\"}",
+          "type": 1
+        },
+        "refresh": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Logs Drill-down",
+  "uid": "heimdall-logs-drilldown",
+  "version": 1,
+  "weekStart": ""
+}

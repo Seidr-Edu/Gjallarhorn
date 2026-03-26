@@ -1,0 +1,239 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres-observability"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres-observability"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT run_id, status, reason, started_at, finished_at, manifest_path, resolved_path\nFROM pipeline_obs.runs\nWHERE run_id = '${run_id}';",
+          "refId": "A"
+        }
+      ],
+      "title": "Run Header",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres-observability"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres-observability"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT step_name, status, reason, report_status, started_at, finished_at, report_path\nFROM pipeline_obs.run_steps\nWHERE run_id = '${run_id}'\nORDER BY CASE step_name\n  WHEN 'brokk' THEN 1\n  WHEN 'eitri' THEN 2\n  WHEN 'lidskjalv-original' THEN 3\n  WHEN 'andvari' THEN 4\n  WHEN 'kvasir' THEN 5\n  WHEN 'lidskjalv-generated' THEN 6\n  ELSE 99 END;",
+          "refId": "A"
+        }
+      ],
+      "title": "Step Timeline",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres-observability"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres-observability"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT service_name, status, reason, status_detail, report_path,\n  andvari_latest_gate_version,\n  kvasir_behavioral_verdict,\n  lidskjalv_quality_gate_status\nFROM pipeline_obs.service_reports\nWHERE run_id = '${run_id}'\nORDER BY service_name;",
+          "refId": "A"
+        }
+      ],
+      "title": "Service Reports",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres-observability"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres-observability"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT step_name, status, project_key, sonar_task_id, quality_gate_status, last_checked_at\nFROM pipeline_obs.sonar_follow_up\nWHERE run_id = '${run_id}'\nORDER BY step_name;",
+          "refId": "A"
+        }
+      ],
+      "title": "Sonar Follow-up",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana",
+        "uid": "-- Grafana --"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 5,
+      "options": {
+        "content": "Open related raw logs in Loki Explore:\n\n- [All logs for this run](/explore?left=%5B%22now-30d%22,%22now%22,%22loki-observability%22,%7B%22expr%22:%22%7Brun_id%3D%5C%22${run_id}%5C%22%7D%22%7D%5D)\n- [Andvari logs](/explore?left=%5B%22now-30d%22,%22now%22,%22loki-observability%22,%7B%22expr%22:%22%7Brun_id%3D%5C%22${run_id}%5C%22,service%3D%5C%22andvari%5C%22%7D%22%7D%5D)\n- [Kvasir logs](/explore?left=%5B%22now-30d%22,%22now%22,%22loki-observability%22,%7B%22expr%22:%22%7Brun_id%3D%5C%22${run_id}%5C%22,service%3D%5C%22kvasir%5C%22%7D%22%7D%5D)",
+        "mode": "markdown"
+      },
+      "title": "Log Links",
+      "type": "text"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "heimdall",
+    "pipeline"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "postgres",
+          "uid": "postgres-observability"
+        },
+        "definition": "SELECT run_id AS __text, run_id AS __value FROM pipeline_obs.runs ORDER BY started_at DESC NULLS LAST LIMIT 200;",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Run ID",
+        "multi": false,
+        "name": "run_id",
+        "options": [],
+        "query": "SELECT run_id AS __text, run_id AS __value FROM pipeline_obs.runs ORDER BY started_at DESC NULLS LAST LIMIT 200;",
+        "refresh": 1,
+        "skipUrlSync": false,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Run Detail",
+  "uid": "heimdall-run-detail",
+  "version": 1,
+  "weekStart": ""
+}
