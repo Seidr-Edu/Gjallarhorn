@@ -51,16 +51,16 @@ transforms:
 
       parsed_pipeline, pipeline_err = parse_regex(path, r'^/srv/pipeline/runs/(?P<run_id>[^/]+)/pipeline/logs/(?P<step>[^/]+)\.log$')
       if pipeline_err == null {
-        .run_id = to_string(parsed_pipeline.run_id) ?? .run_id
-        .step = to_string(parsed_pipeline.step) ?? .step
-        .service = to_string(parsed_pipeline.step) ?? .service
+        .run_id = parsed_pipeline.run_id
+        .step = parsed_pipeline.step
+        .service = parsed_pipeline.step
         .source = "pipeline"
       } else {
         parsed_service, service_err = parse_regex(path, r'^/srv/pipeline/runs/(?P<run_id>[^/]+)/services/(?P<service>[^/]+)/run/.+$')
         if service_err == null {
-          .run_id = to_string(parsed_service.run_id) ?? .run_id
-          .step = to_string(parsed_service.service) ?? .step
-          .service = to_string(parsed_service.service) ?? .service
+          .run_id = parsed_service.run_id
+          .step = parsed_service.service
+          .service = parsed_service.service
           .source = "service"
         }
       }
@@ -68,9 +68,9 @@ transforms:
       if exists(.message) {
         parsed_json, err = parse_json(.message)
         if err == null && is_object(parsed_json) {
-          if exists(parsed_json.run_id) { .run_id = to_string(parsed_json.run_id) ?? .run_id }
-          if exists(parsed_json.job_id) { .job_id = to_string(parsed_json.job_id) ?? null }
-          if exists(parsed_json.level) { .level = to_string(parsed_json.level) ?? null }
+          if exists(parsed_json.run_id) { .run_id = to_string(parsed_json.run_id) }
+          if exists(parsed_json.job_id) { .job_id = to_string(parsed_json.job_id) }
+          if exists(parsed_json.level) { .level = to_string(parsed_json.level) }
         }
       }
 
