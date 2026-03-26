@@ -28,14 +28,21 @@ pipeline itself.
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and set the Grafana and Postgres passwords.
-2. Ensure the host exposes:
+1. Clone the repo on the VPS:
+
+```bash
+git clone git@github.com:Seidr-Edu/Gjallarhorn.git /opt/gjallarhorn
+cd /opt/gjallarhorn/deploy/observability
+```
+
+2. Copy `.env.example` to `.env` and set the Grafana and Postgres passwords.
+3. Ensure the host exposes:
    - `/srv/pipeline/queue`
    - `/srv/pipeline/runs`
    - `/var/log/journal`
    - `/run/log/journal`
    - `/etc/machine-id`
-3. Start the stack:
+4. Start the stack:
 
 ```bash
 docker compose up -d --build

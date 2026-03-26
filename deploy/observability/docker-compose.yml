@@ -62,7 +62,7 @@ services:
   run-indexer:
     build:
       context: ../..
-      dockerfile: examples/observability/run-indexer.Dockerfile
+      dockerfile: deploy/observability/run-indexer.Dockerfile
     restart: unless-stopped
     depends_on:
       postgres:
