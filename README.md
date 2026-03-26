@@ -227,3 +227,60 @@ python -m pip install 'git+ssh://git@github.com/Seidr-Edu/Gjallarhorn.git@main'
 cd /opt/gjallarhorn/deploy/observability
 docker compose up -d --build
 ```
+
+## Troubleshooting
+
+### `run-indexer`: `password authentication failed for user "gjallarhorn"`
+
+This means the password inside `GJALLARHORN_DB_DSN` does not match the password
+that Postgres is actually using.
+
+Check these first:
+
+- `POSTGRES_USER` in `deploy/observability/.env`
+- `POSTGRES_PASSWORD` in `deploy/observability/.env`
+- `GJALLARHORN_DB_DSN` in `deploy/observability/.env`
+
+They must agree. Example:
+
+```env
+POSTGRES_USER=gjallarhorn
+POSTGRES_PASSWORD=my-secret-password
+GJALLARHORN_DB_DSN=postgresql://gjallarhorn:my-secret-password@postgres:5432/gjallarhorn_observability
+```
+
+Important: if you changed `.env` after Postgres had already initialized its data
+directory, the existing `postgres_data` volume still keeps the old password.
+
+If this is a fresh observability install and you do not need to keep the DB
+contents yet, reset the stack volume:
+
+```bash
+cd /opt/gjallarhorn/deploy/observability
+docker compose down -v
+docker compose up -d --build
+```
+
+If you need to keep existing Postgres data, do not delete the volume. In that
+case, either:
+
+- change `GJALLARHORN_DB_DSN` back to the original password used when Postgres was first created
+- or log into Postgres and rotate the user password to match the DSN
+
+### `vector`: `unhandled fallible assignment` / `undefined variable`
+
+That was caused by invalid VRL in the shipped `vector.yaml`. Update to the
+latest `Gjallarhorn` commit and rebuild the stack:
+
+```bash
+cd /opt/gjallarhorn
+git pull --ff-only
+cd /opt/gjallarhorn/deploy/observability
+docker compose up -d --build vector
+```
+
+If you want to restart the full stack:
+
+```bash
+docker compose up -d --build
+```

@@ -49,18 +49,18 @@ transforms:
       .source = "service"
       path = to_string!(.file)
 
-      parsed_pipeline = parse_regex(path, r'^/srv/pipeline/runs/(?P<run_id>[^/]+)/pipeline/logs/(?P<step>[^/]+)\.log$')
-      if parsed_pipeline != null {
-        .run_id = parsed_pipeline.run_id
-        .step = parsed_pipeline.step
-        .service = parsed_pipeline.step
+      parsed_pipeline, pipeline_err = parse_regex(path, r'^/srv/pipeline/runs/(?P<run_id>[^/]+)/pipeline/logs/(?P<step>[^/]+)\.log$')
+      if pipeline_err == null {
+        .run_id = to_string(parsed_pipeline.run_id) ?? .run_id
+        .step = to_string(parsed_pipeline.step) ?? .step
+        .service = to_string(parsed_pipeline.step) ?? .service
         .source = "pipeline"
       } else {
-        parsed_service = parse_regex(path, r'^/srv/pipeline/runs/(?P<run_id>[^/]+)/services/(?P<service>[^/]+)/run/.+$')
-        if parsed_service != null {
-          .run_id = parsed_service.run_id
-          .step = parsed_service.service
-          .service = parsed_service.service
+        parsed_service, service_err = parse_regex(path, r'^/srv/pipeline/runs/(?P<run_id>[^/]+)/services/(?P<service>[^/]+)/run/.+$')
+        if service_err == null {
+          .run_id = to_string(parsed_service.run_id) ?? .run_id
+          .step = to_string(parsed_service.service) ?? .step
+          .service = to_string(parsed_service.service) ?? .service
           .source = "service"
         }
       }

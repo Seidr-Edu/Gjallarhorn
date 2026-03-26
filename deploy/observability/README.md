@@ -78,3 +78,35 @@ The dashboards assume the provisioned datasource UIDs:
 
 - `postgres-observability`
 - `loki-observability`
+
+## Troubleshooting
+
+### `run-indexer` cannot authenticate to Postgres
+
+If you see `password authentication failed for user "gjallarhorn"`, check that
+these values in `.env` all match:
+
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `GJALLARHORN_DB_DSN`
+
+If Postgres was already initialized with an older password, changing `.env`
+alone is not enough because the `postgres_data` volume keeps the original DB
+state. For a fresh install, reset the stack volumes:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+### Vector VRL parse error
+
+If Vector fails with `unhandled fallible assignment`, update to the latest repo
+version and rebuild the `vector` service:
+
+```bash
+cd /opt/gjallarhorn
+git pull --ff-only
+cd /opt/gjallarhorn/deploy/observability
+docker compose up -d --build vector
+```
